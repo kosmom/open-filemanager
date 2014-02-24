@@ -3,22 +3,33 @@ body{
 	margin: 0px;
 	font-family: arial,tahoma;
 }
-.panel{
+.open-filemanager *,.open-filemanager *:after,.open-filemanager *:before{
+    -moz-box-sizing: content-box;
+}
+.open-filemanager .panel{
 	background-color: #333;
 	color: #ccc;
 	padding: 10px;
+	border-width: 0px;
+	border-radius: 0px;
 }
-.panel a{
+.open-filemanager .panel a{
 	cursor: pointer;
+	font-size: 16px;
+	color: inherit;
 }
-.folder{
+.open-filemanager .folder{
 	padding: 10px;
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
     user-select: none;
 }
-.folder div{
+.open-filemanager .clear{
+	clear: both;
+	padding: 5px;
+}
+.open-filemanager .folder div{
 	display: block;
 	float: left;
 	width: 150px;
@@ -28,59 +39,59 @@ body{
 	border: 1px solid #ccc;
 	cursor: pointer;
 }
-.folder div:hover{
+.open-filemanager .folder div:hover{
     background-color: #eee;
 }
-.folder div b{
+.open-filemanager .folder div b{
     width: 150px;
     text-overflow: ellipsis;
     display: block;
     overflow: hidden;
 }
-.folder div img{
+.open-filemanager .folder div img{
 	max-width: 150px;
 	max-height: 150px;
 	display: block;
 	margin: 0px auto;
 }
-.folder div.selected{
+.open-filemanager .folder div.selected{
 	background-color: yellow;
 }
 
-form { 
+.open-filemanager form {
     overflow: hidden;
     position: relative;
     vertical-align: top;
     display: inline-block;
     margin: 0px;
 }
- 
-form .upload { 
+
+.open-filemanager form .upload {
     float: right;
     overflow: hidden;
     text-align: center;
     width: 100%;
 }
- 
-form input{
+
+.open-filemanager form input{
     cursor: pointer;
-    position:absolute; 
-    width:100%; 
-    -moz-opacity: 0; 
-    filter: alpha(opacity=0); 
-    opacity: 0; 
-    height: 30px; 
+    position:absolute;
+    width:100%;
+    -moz-opacity: 0;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    height: 30px;
 }
-.error{
+.open-filemanager .error{
     background-color: red;
     color: white;
     padding: 10px;
     border: 1px solid #fcc;
 }
-.right{
+.open-filemanager .right{
     float: right;
 }
-.dark{
+.open-filemanager .dark{
     display: none;
     background-color: rgba(0,0,0,.5);
     width: 100%;
@@ -90,20 +101,32 @@ form input{
     cursor: pointer;
     top: 0px;
 }
-.dark div{
+.open-filemanager .dark div{
     width: 550px;
     padding: 30px;
     background-color: white;
     border: 1px solid black;
     box-shadow: 2px 2px 2px black;
-    height: 200px;
     margin: 100px auto;
     font-size: 15px;
     cursor: pointer;
 }
-h1{
+.open-filemanager h1{
     margin: 0px;
 }
-.panel a:hover,.panel form:hover a{
+.open-filemanager .panel a:hover,.open-filemanager .panel form:hover a{
     color: white;
+}
+
+.open-filemanager .lazy-load,.open-filemanager .lazy-loaded {
+  -webkit-transition: opacity 0.3s;
+  -moz-transition: opacity 0.3s;
+  -ms-transition: opacity 0.3s;
+  -o-transition: opacity 0.3s;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+.open-filemanager .lazy-loaded {
+opacity: 1;
 }
