@@ -3,10 +3,10 @@ function select(object){
     $(object).addClass('selected');
 }
 function set_folder(object,folder){
-    if (typeof(folder)!='undefined'){
-        location.href='?folder='+folder;
+	if (typeof(folder)!='undefined'){
+		location.search='?folder='+folder;
     }else{
-        location.href='?folder='+$(object).attr('folder')+$(object).find('b').text();
+        location.search='?folder='+$(object).attr('folder')+$(object).find('b').text();
     }
 }
 function create_folder(){
@@ -104,20 +104,23 @@ tinyMCEPopup = {
 
 function set_image(object){
     var val=$(object).attr('folder')+$(object).find('b').text();
-    if (typeof(top.tinymce)!=='undefined'){
-        if (typeof(top.tinymce.activeEditor.windowManager.getParams)!='undefined'){
-            var args = top.tinymce.activeEditor.windowManager.getParams();
-            top.document.getElementById(args['input']).value = val;
-            top.tinymce.activeEditor.windowManager.close();
-            return true;
-        }
+    try {
+	if (typeof(top.tinymce)!=='undefined'){
+        if (typeof(top.tinymce.activeEditor)){
+			if (typeof(top.tinymce.activeEditor.windowManager.getParams)!='undefined'){
+	            var args = top.tinymce.activeEditor.windowManager.getParams();
+	            top.document.getElementById(args['input']).value = val;
+	            top.tinymce.activeEditor.windowManager.close();
+	            return true;
+	        }
+		}
     }
-    
-		tinyMCEPopup.init();
+	}catch (e) { void(e); }
+	tinyMCEPopup.init();
     var win = tinyMCEPopup.getWindowArg("window");
         win.document.getElementById(tinyMCEPopup.getWindowArg("input")).value = val;
         //for image browsers
         try { win.ImageDialog.showPreviewImage(url); }
         catch (e) { void(e); }
-        tinyMCEPopup.close();   		
+        tinyMCEPopup.close();
 }
