@@ -4,28 +4,35 @@ session_start();
 $basefolder='images/photo';
 $upload_extensions=array('gif','jpeg','jpg','png'); // в нижнем регистре
 $basehttp='http://'.$_SERVER['HTTP_HOST'].'/';
-$replace_when_exists=true;
+$replace_when_exists=false;
 $lazy_load=true;
-
+$translit=true;
 $modify_images=array(
-	'aspect-ratio-modify'=>'crop', // resize,crop,false
+	'aspect-ratio-modify'=>false, // resize,crop,false
 	'aspect-ratio-crop-position'=>100,
 	'aspect-ratio-prop'=>2/3,
-	'max-width'=>false,
-	'max-height'=>1000,
+	'max-width'=>848,
+	'max-height'=>false,
 	'quality'=>50,
-	'format'=>'jpg' // jpg,png,gif,false==source
+	'format'=>false // jpg,png,gif,false==source
 );
+
+$include=array(
+	array('type'=>'js','href'=>'//code.jquery.com/jquery-1.10.2.min.js'),
+	array('type'=>'js','href'=>$basehttp.'/js/open-filemanager.js'),
+	array('type'=>'css','href'=>$basehttp.'/css/open-filemanager.css'),
+);
+if ($lazy_load)$include[]=array('type'=>'js','href'=>$basehttp.'/js/lazyload.js');
 
 if (!isset($rights))$rights=array();
 // access
 // flle - read,delete,rename,upload,choose
 // folder - read,delete,rename,create
 
-
 if (file_exists('open-filemanager-config.php'))  require 'open-filemanager-config.php';
 if (empty($rights['access']))die('Доступ запрещен');
 
+/*********************code next*************************/
 $scriptfolder=dirname($_SERVER['SCRIPT_FILENAME']);
 $folder=$_GET['folder'];
 $full_name=realpath($basefolder.$folder);
@@ -237,6 +244,8 @@ switch($_POST['act']){
 		}
 }
 function translit($str){
+	global $translit;
+	if (!$tranlit)return $str;
 	return strtr($str,array(
 	"?"=>'-quest-',"•"=>'-',"–"=>'-',">"=>'-',"<"=>'-',"%"=>'-percent-',"`"=>'-',"~"=>'-',"№"=>'-num-',";"=>'-',"#"=>'-',"*"=>'-',"@"=>'-at-',"]"=>'-',"["=>'-',"»"=>'-',"«"=>'-',":"=>'-',"\t"=>'',"\r"=>'',"\n"=>'',"\\"=>'-',"&"=>'-and-',"/"=>'-',"'"=>'-','"'=>'-'," "=>'-',
 	"а"=>'a',"б"=>'b',"в"=>'v',"г"=>'g',"д"=>'d',"е"=>'e',"ё"=>'yo',"ж"=>'zh',"з"=>'z',"и"=>'i',"й"=>'j',"к"=>'k',"л"=>'l',"м"=>'m',"н"=>'n',"о"=>'o',"п"=>'p',"р"=>'r',"с"=>'s',"т"=>'t',"у"=>'u',"ф"=>'f',"х"=>'kh',"ц"=>'c',"ч"=>'ch',"ш"=>'sh',"щ"=>'sch',"ъ"=>'',"ы"=>'y',"ь"=>'',"э"=>'e',"ю"=>'yu',"я"=>'ja'
@@ -244,14 +253,20 @@ function translit($str){
 }
 ?>
 <title>Open-filemanager</title>
-<script src="<?=$basehttp?>/js/jquery.js"></script>
-<?if ($lazy_load){?><script src="<?=$basehttp?>/js/lazyload.js"></script><?}?>
-<script src="<?=$basehttp?>/js/open-filemanager.js"></script>
-<link href="<?=$basehttp?>/css/open-filemanager.css" rel="stylesheet" type="text/css" />
+<?foreach ($include as $item){
+switch ($item['type']){
+	case 'js':
+		?><script src="<?=$item['href']?>"></script><?
+		break;
+	case 'css':
+		?><link href="<?=$item['href']?>" rel="stylesheet" type="text/css" /><?
+		break;
+}
+}?>
 <div class="open-filemanager">
 <div class="dark">
 <div>
-	<h1>Open-filemanager</h1><span>v 2.0</span>
+<h1>Open-filemanager</h1><span>v 2.1</span>
 <?if ($rights['file']['choose']){?><p>Дважды щелкните на файл, чтобы выбрать его</p><?}?>
 <p><b>Open-filemanager</b> - простой бесплатный файл-менеджер с открытым исходным кодом. Вы можете использовать его как угодно, где угодно и когда угодно без каких-либо ограничений</p>
 <p>Используйте продукт на свой страх и риск. Автор не несет ответственности за использование данного продукта</p>
@@ -265,7 +280,7 @@ function translit($str){
 	<?if ($rights['folder']['delete']||$rights['file']['delete']){?><a onclick="delete_()" class="delete">Удалить</a><?}?>
 	<a onclick="$('.dark').fadeIn(999);" class="right">?</a>
 </div>
-	<?foreach ($error as $err){?><div class="error"><?=$err?></div><?}?>
+	<?if (isset($error))foreach ($error as $err){?><div class="error"><?=$err?></div><?}?>
 <div class="folder">
 <?
 
@@ -275,14 +290,14 @@ if ($filename=='..'){
     if ($path=='')continue;
     if (!$rights['folder']['read'])continue;
     ?>
-	<div onclick="select(this)" ondblclick="set_folder(this,'<?=$backpath?>')" folder='<?=$backpath?>/'><b>..</b></div>
+	<div class="folder open" onclick="select(this)" ondblclick="set_folder(this,'<?=$backpath?>')" folder='<?=$backpath?>/'><b>..</b></div>
 <?
 continue;
 }
 if (is_dir($full_name.'/'.$filename)){
 if (!$rights['folder']['read'])continue;
 ?>
-	<div onclick="select(this)" ondblclick="set_folder(this)" folder='<?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
+	<div class="folder closed" onclick="select(this)" ondblclick="set_folder(this)" folder='<?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
 <?}else{
 	if (!$rights['file']['read'])continue;?>
 	<div onclick="select(this)" <?if ($rights['file']['choose']){?>ondblclick="set_image(this)"<?}?> <?if ($selected==$filename){?>class="selected"<?}?> folder='<?=$basefolder?><?=$path?>/'><img <?if ($lazy_load){?>class="lazy-load" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-<?}?>src="<?=$basehttp?><?=$basefolder?><?=$path?>/<?=$filename?>"><b title="<?=$filename?>"><?=$filename?></b></div>
