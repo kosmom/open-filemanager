@@ -1,4 +1,4 @@
-open-filemanager
+Open-filemanager
 ================
 
 free filemanager for tinymce 3-4
@@ -15,16 +15,20 @@ free filemanager for tinymce 3-4
 
 Настройка
 =========
-Вся настройка параметров указана в самом начале файла. Для удобства обновления - вы можете настроить файл open-fileserver-config.php в аналогичной папке с изменением настроек по умолчанию.
+Вся настройка параметров указана в самом начале файла. Для удобства обновления - вы можете настроить файл open-fileserver-config.php в аналогичной папке с изменением настроек по умолчанию, или использовать свой файл с конфигурацией, указав его в GET['config'] параметре.
+
+Пример файла конфигурации для файл-менеджера
 
 ```php
+if (!$open_filemanager)die('sorry');
+
 $basefolder='images/userfiles'; // базовая директория для работы с изображениями
 $upload_extensions=array('gif','jpeg','jpg','png');  // допустимые расширения файлов для загрузки
 $basehttp='http://'.$_SERVER['HTTP_HOST'].'/'; // путь к начальной папке с сайтом
 $replace_when_exists=true; // замена изображения при совпадении имен
 $lazy_load=true; // ленивая загрузка изображений (включена по умолчанию)
 $translit=true; // включен ли транслит (рекомендуется)
-
+$soft_check=0; // более мягкая проверка путей. Проверяться будут на схожесть последние soft_check символов
 $modify_images=array(
 	'aspect-ratio-modify'=>'crop', // преобразование изображений к нужным пропорциям (crop,resize,false)
 	'aspect-ratio-crop-position'=>100, // выбор части обрезаемого изобржения - при обрезании
@@ -37,7 +41,7 @@ $modify_images=array(
 
 // подгружаемые скрипты. Если вы захотите расположить их где-то в другом месте - можете изменить их положение легко
 $include=array( 
-	array('type'=>'js','href'=>'//code.jquery.com/jquery-1.10.2.min.js'),
+	array('type'=>'js','href'=>'//code.jquery.com/jquery-1.11.0.min.js'),
 	array('type'=>'js','href'=>$basehttp.'/js/open-filemanager.js'),
 	array('type'=>'css','href'=>$basehttp.'/css/open-filemanager.css'),
 );
@@ -47,19 +51,18 @@ if ($lazy_load)$include[]=array('type'=>'js','href'=>$basehttp.'/js/lazyload.js'
 // права доступа. Установите нужный показатель, например переменную в сессии, например
 if ($_SESSION['read-only']){
 $rights=array('access'=>true,'file'=>array('read'=>true,'choose'=>true),'folder'=>array('read'=>true));
-}
-
-if (!isset($rights))$rights=array();
 // access
 // flle - read,delete,rename,upload,choose
 // folder - read,delete,rename,create
+
+}
 ```
 
 Настройка для работы с tinymce 4. Пример шаблона
 ===============================================
 ```js
 tinymce.init({
-		...
+	...
 	file_browser_callback: function(field_name, url, type, win) {
 			tinyMCE.activeEditor.windowManager.open({
 		        url: "open-filemanager.php",
@@ -76,7 +79,19 @@ tinymce.init({
 	});
 ```
 
-Встраивание менеджера внутри страницы
+Вызов файл-менеджера в качестве автономного решения
+==================================================
+
+В примере указывается подключение отдельного файла с конфигурацией open-filemanager-config-content.php в аналогичном каталоге и передается функция обратного вызова set_pp. На случай обращения из множества полей на одной странице. Не забудьте предоставить права на выбор файла $rights['file']['choose']=true; в конфигурации
+
+```js
+window.open("open-filemanager.php?config=open-filemanager-config-content&choose=set_pp", "get_image", "width=800,height=800,status=no,toolbar=no,menubar=no,scrollbars=yes");
+function set_pp(image){
+	alert(image);
+}
+```
+
+Встраивание менеджера inline внутри страницы
 =====================================
 
 Для встраивания менеджера внутрь своей формы и обрамления - используйте буферизацию в логическом файле
@@ -97,6 +112,11 @@ ob_clean();
 
 Краткая история версий
 ======================
+
+2.2
+- Возможность указания нечеткой проверки путей soft_check
+- Вызов в качестве автономного пикера файлов
+- Возможность вызова файл-менеджера с разными конфигурациями (для разнообразного использования в рамках одного сайта)
 
 2.1
 - Все настройки перечислены до кодов для удобной конфигурации
