@@ -3,11 +3,7 @@ function select(object){
     $(object).addClass('selected');
 }
 function set_folder(object,folder){
-	if (typeof(folder)!='undefined'){
-		location.search='?folder='+folder;
-    }else{
-        location.search='?folder='+$(object).attr('folder')+$(object).find('b').text();
-    }
+	location.search='?folder='+(typeof(folder)!='undefined'?folder:$(object).attr('folder')+$(object).find('b').text())+(typeof(config_file)!='undefined'?'&config='+config_file:'')+(typeof(choose_function)!='undefined'?'&choose='+choose_function:'');
 }
 function create_folder(){
     var name=prompt('Укажите название папки');
@@ -104,7 +100,13 @@ tinyMCEPopup = {
 
 function set_image(object){
     var val=$(object).attr('folder')+$(object).find('b').text();
-    try {
+	if (typeof('choose_function')!='undefined'){
+		if (typeof(opener[choose_function])=='function'){
+			opener[choose_function](val);
+			return window.close();
+		}
+	}else{
+	try {
 	if (typeof(top.tinymce)!=='undefined'){
         if (typeof(top.tinymce.activeEditor)){
 			if (typeof(top.tinymce.activeEditor.windowManager.getParams)!='undefined'){
@@ -123,4 +125,5 @@ function set_image(object){
         try { win.ImageDialog.showPreviewImage(url); }
         catch (e) { void(e); }
         tinyMCEPopup.close();
+	}
 }
