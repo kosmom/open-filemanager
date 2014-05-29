@@ -7,6 +7,7 @@ $basehttp='http://'.$_SERVER['HTTP_HOST'].'/';
 $replace_when_exists=false;
 $lazy_load=true;
 $translit=true;
+$soft_check=0;
 $modify_images=array(
 	'aspect-ratio-modify'=>false, // resize,crop,false
 	'aspect-ratio-crop-position'=>100,
@@ -18,7 +19,7 @@ $modify_images=array(
 );
 
 $include=array(
-	array('type'=>'js','href'=>'//code.jquery.com/jquery-1.10.2.min.js'),
+	array('type'=>'js','href'=>'//code.jquery.com/jquery-1.11.0.min.js'),
 	array('type'=>'js','href'=>$basehttp.'/js/open-filemanager.js'),
 	array('type'=>'css','href'=>$basehttp.'/css/open-filemanager.css'),
 );
@@ -28,8 +29,10 @@ if (!isset($rights))$rights=array();
 // access
 // flle - read,delete,rename,upload,choose
 // folder - read,delete,rename,create
-
-if (file_exists('open-filemanager-config.php'))  require 'open-filemanager-config.php';
+$config_file='open-filemanager-config.php';
+if (isset($_GET['config']))$config_file=$_GET['config'].'.php';
+$open_filemanager=true;
+if (file_exists($config_file))require $config_file;
 if (empty($rights['access']))die('Доступ запрещен');
 
 /*********************code next*************************/
@@ -37,7 +40,7 @@ $scriptfolder=dirname($_SERVER['SCRIPT_FILENAME']);
 $folder=$_GET['folder'];
 $full_name=realpath($basefolder.$folder);
 if (!$full_name)die('Базового каталога '.$basefolder.' не существует');
-if (substr(str_replace('\\','/',$full_name),0,strlen($scriptfolder.$basefolder)+1)!=$scriptfolder."/".$basefolder)die('Каталог указан не верно');
+if (substr(substr(str_replace('\\','/',$full_name),0,strlen($scriptfolder.$basefolder)+1),$soft_check)!=substr($scriptfolder."/".$basefolder,$soft_check))die('Каталог '.$basefolder.' указан не верно');
 $path=substr(str_replace('\\','/',$full_name),strlen($scriptfolder.$basefolder)+1);
 $backpath=substr(str_replace('\\','/',realpath($basefolder.$folder.'/..')),strlen($scriptfolder.$basefolder)+1);
 switch($_POST['act']){
@@ -253,6 +256,13 @@ function translit($str){
 }
 ?>
 <title>Open-filemanager</title>
+<?if (isset($_GET['config']) || isset($_GET['choose'])){?>
+<script>
+<?if (isset($_GET['config'])){?>var config_file='<?=htmlspecialchars($_GET['config'])?>';<?}?>
+<?if (isset($_GET['choose'])){?>var choose_function='<?=htmlspecialchars($_GET['choose'])?>';<?}?>
+</script>
+<?}?>
+
 <?foreach ($include as $item){
 switch ($item['type']){
 	case 'js':
@@ -266,7 +276,7 @@ switch ($item['type']){
 <div class="open-filemanager">
 <div class="dark">
 <div>
-<h1>Open-filemanager</h1><span>v 2.1</span>
+<h1>Open-filemanager</h1><span>v 2.2</span>
 <?if ($rights['file']['choose']){?><p>Дважды щелкните на файл, чтобы выбрать его</p><?}?>
 <p><b>Open-filemanager</b> - простой бесплатный файл-менеджер с открытым исходным кодом. Вы можете использовать его как угодно, где угодно и когда угодно без каких-либо ограничений</p>
 <p>Используйте продукт на свой страх и риск. Автор не несет ответственности за использование данного продукта</p>
