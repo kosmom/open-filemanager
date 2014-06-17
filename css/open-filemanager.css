@@ -12,6 +12,7 @@ body{
 	padding: 10px;
 	border-width: 0px;
 	border-radius: 0px;
+	min-height: 15px;
 }
 .open-filemanager .panel a{
 	cursor: pointer;
@@ -25,36 +26,54 @@ body{
 	-ms-user-select: none;
     user-select: none;
 }
-.open-filemanager .clear{
+.open-filemanager .folder b::before{
+    content:"¶";
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+    display: block;
+    font-family: tahoma;
+    text-shadow: 11px 0px 0px #999, -11px 0px 0px #ccc;
+    margin-left: 20px;
+    font-size: 100px;
+    color: #999;
+}
+.open-filemanager .folder.closed b::before{
+    text-shadow: 11px 0px 0px #999, -8px 0px 0px #bbb;
+}
+
+.open-filemanager .main-folder::after{
 	clear: both;
 	padding: 5px;
 }
-.open-filemanager .folder div{
+.open-filemanager .main-folder div{
 	display: block;
 	float: left;
-	width: 150px;
-	height: 170px;
-	padding: 10px;
+	width: 160px;
+	height: 180px;
+	padding: 5px;
 	text-align: center;
 	border: 1px solid #ccc;
 	cursor: pointer;
 }
-.open-filemanager .folder div:hover{
+.open-filemanager .main-folder div:hover{
     background-color: #eee;
 }
-.open-filemanager .folder div b{
-    width: 150px;
+.open-filemanager .main-folder div b{
+    width: 160px;
     text-overflow: ellipsis;
     display: block;
     overflow: hidden;
 }
-.open-filemanager .folder div img{
-	max-width: 150px;
-	max-height: 150px;
+.open-filemanager .main-folder div img{
+	max-width: 160px;
+	max-height: 160px;
 	display: block;
 	margin: 0px auto;
 }
-.open-filemanager .folder div.selected{
+.open-filemanager .main-folder div.selected{
 	background-color: yellow;
 }
 
@@ -96,17 +115,28 @@ body{
     background-color: rgba(0,0,0,.5);
     width: 100%;
     height: 100%;
-    position: absolute;
+    position: fixed;
     text-align: center;
     cursor: pointer;
     top: 0px;
+    z-index: 10;
+	overflow-y: auto;
 }
 .open-filemanager .dark div{
     width: 550px;
     padding: 30px;
-    background-color: white;
-    border: 1px solid black;
-    box-shadow: 2px 2px 2px black;
+    
+    background: #ffffff;
+background: -moz-linear-gradient(-45deg,  #ffffff 0%, #cccccc 100%);
+background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#ffffff), color-stop(100%,#cccccc));
+background: -webkit-linear-gradient(-45deg,  #ffffff 0%,#cccccc 100%);
+background: -o-linear-gradient(-45deg,  #ffffff 0%,#cccccc 100%);
+background: -ms-linear-gradient(-45deg,  #ffffff 0%,#cccccc 100%);
+background: linear-gradient(135deg,  #ffffff 0%,#cccccc 100%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#cccccc',GradientType=1 );
+    border-radius: 10px;
+    box-shadow: 0 0 15px #aaa;
+    
     margin: 100px auto;
     font-size: 15px;
     cursor: pointer;
