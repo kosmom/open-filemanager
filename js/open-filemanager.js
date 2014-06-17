@@ -8,7 +8,7 @@ function set_folder(object,folder){
 function create_folder(){
     var name=prompt('Укажите название папки');
     if (!name)return ;
-    $.post(location.href,{act:'add_folder',folder:name},function(data){
+    $.post(location.href,{act:'add_folder',folder:name,csrf:csrf},function(data){
         if (data=='done')location.reload(); else alert('Ошибка: '+data);
     });
 }
@@ -20,7 +20,7 @@ function delete_(){
         return ;
     }
     if (!confirm('Файл/папка будет удалена безвозвратно. Хотите продолжить?'))return false;
-    $.post(location.href,{act:'delete',name:name},function(data){
+    $.post(location.href,{act:'delete',name:name,csrf:csrf},function(data){
         if (data=='done')$('.selected').remove(); else alert('Ошибка: '+data);
     });
 }
@@ -33,9 +33,12 @@ function rename(){
     }
     var newname=prompt('Укажите новое имя файла/папки',name);
     if (!newname)return false;
-    $.post(location.href,{act:'rename',name:name,newname:newname},function(data){
+    $.post(location.href,{act:'rename',name:name,newname:newname,csrf:csrf},function(data){
         if (data=='done')$('.selected b').text(newname); else alert('Ошибка: '+data);
     });
+}
+function open_module(module_file){
+	get_pic_win= window.open(module_file, "open-filemanager-module", "width=800,height=450,status=no,toolbar=no,menubar=no,scrollbars=no");
 }
 $(function(){
 $('.dark').click(function(){
