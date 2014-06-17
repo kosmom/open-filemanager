@@ -1,9 +1,9 @@
 Open-filemanager
 ================
 
-free filemanager for tinymce 3-4
+free filemanager for tinymce 3-4 or standalone version
 
-Бесплатный файлменеджер для управления файлами. Легкий вес, быстрая загрузка, легко управлять и исправлять. Поддержка транслита загружаемых изображений и каталогов, гибкая настройка прав, преобразования изображений, мультизагрузка
+Бесплатный файлменеджер для управления файлами. Легкий, гибкий, быстрая загрузка, легко настраивать и расширять. Поддержка транслита, преобразование изображений, гибкая настройка прав на каждый каталог в отдельности, мультизагрузка, CSRF защита, поддержка модулей
 
 Требования
 ==========
@@ -16,6 +16,7 @@ free filemanager for tinymce 3-4
 Настройка
 =========
 Вся настройка параметров указана в самом начале файла. Для удобства обновления - вы можете настроить файл open-fileserver-config.php в аналогичной папке с изменением настроек по умолчанию, или использовать свой файл с конфигурацией, указав его в GET['config'] параметре.
+Если параметр передан - файл с настройками должен иметь путь с open-filemanager-config-{GET['config']}.php
 
 Пример файла конфигурации для файл-менеджера
 
@@ -24,6 +25,7 @@ if (!$open_filemanager)die('sorry');
 
 $basefolder='images/userfiles'; // базовая директория для работы с изображениями
 $upload_extensions=array('gif','jpeg','jpg','png');  // допустимые расширения файлов для загрузки
+$csrf_secret='mysecretphrase'; // ваш защитный ключ для обеспечения CSRF защиты
 $basehttp='http://'.$_SERVER['HTTP_HOST'].'/'; // путь к начальной папке с сайтом
 $replace_when_exists=true; // замена изображения при совпадении имен
 $lazy_load=true; // ленивая загрузка изображений (включена по умолчанию)
@@ -47,6 +49,9 @@ $include=array(
 );
 if ($lazy_load)$include[]=array('type'=>'js','href'=>$basehttp.'/js/lazyload.js');
 
+// скрытие и отображение только конкретных файлов в каталоге. Имена файлов должны идти в качестве ключей массивов
+$show_files=array(); // key as filename/foldername
+$hide_files=array(); // key as filename/foldername
 
 // права доступа. Установите нужный показатель, например переменную в сессии, например
 if ($_SESSION['read-only']){
@@ -71,7 +76,7 @@ tinymce.init({
 		        close_previous: "no",
 		        inline: "yes"
 			}, {
-			      window : win,
+			window : win,
 		        input: field_name
 		    });
 	    }
@@ -85,7 +90,7 @@ tinymce.init({
 В примере указывается подключение отдельного файла с конфигурацией open-filemanager-config-content.php в аналогичном каталоге и передается функция обратного вызова set_pp. На случай обращения из множества полей на одной странице. Не забудьте предоставить права на выбор файла $rights['file']['choose']=true; в конфигурации
 
 ```js
-window.open("open-filemanager.php?config=open-filemanager-config-content&choose=set_pp", "get_image", "width=800,height=800,status=no,toolbar=no,menubar=no,scrollbars=yes");
+window.open("open-filemanager.php?config=content&choose=set_pp", "get_image", "width=800,height=800,status=no,toolbar=no,menubar=no,scrollbars=yes");
 function set_pp(image){
 	alert(image);
 }
@@ -110,8 +115,79 @@ ob_clean();
 </div>
 ```
 
+Пример файла конфигурации для определения настроек в зависимости от каталога
+============================================================================
+
+Структура приведенная ниже позволяет задать для каждой папки свою группу любых настроек, от прав, до правил обработки изображений. Все настройки накладываются на предыдущие, если они указаны в списке
+```php
+// права по умолчанию
+$rights=array('access'=>true,'file'=>array('read'=>false,'delete'=>false,'rename'=>false,'upload'=>false,'choose'=>false),'folder'=>array('read'=>true,'delete'=>false,'rename'=>false,'create'=>false));
+
+// for each folder
+if (!$_GET['folder'])return true;
+$links=explode('/',substr($_GET['folder'],1));
+foreach ($links as $item){
+$folder[]=$item;
+switch (implode('/',$folder)){
+	case 'myimages':
+		// категория пользователя. В ней у пользователя есть все права
+		$rights=array('access'=>true,'file'=>array('read'=>true,'delete'=>true,'rename'=>true,'upload'=>true,'choose'=>true),'folder'=>array('read'=>true,'delete'=>true,'rename'=>true,'create'=>true));
+		
+		break;
+	case 'myimages/blog':
+		// категория блогов для пользователя. В ней у пользователя действует ограниченый список прав и существуют свои правила для заливки изображений
+		$rights['folder']=array('read'=>false,'delete'=>false,'rename'=>false,'create'=>false);
+		$modify_images=array(
+			'aspect-ratio-modify'=>'crop',
+			'aspect-ratio-crop-position'=>100,
+			'aspect-ratio-prop'=>2/3,
+			'max-width'=>false,
+			'max-height'=>1000,
+			'quality'=>50,
+			'format'=>'jpg'
+		);
+	case 'public':
+		// публичная категория. В ней у пользователя есть права только на просмотр
+		$rights=array('access'=>true,'file'=>array('read'=>true,'delete'=>false,'rename'=>false,'upload'=>false,'choose'=>true),'folder'=>array('read'=>true,'delete'=>false,'rename'=>false,'create'=>false));
+		break;
+}
+}
+```
+
+Подключение собственных модулей
+===============================
+
+У вас есть возможность встроить и вызывать свои модули для работы с open-filemanager. Будь то генератор текстов, изображений, заливальщик, преобразователь и т.д.
+Чтобы зарегистрировать модуль - нужно указать его в архиве $modules в виде структуры
+```php
+$modules['text-generator']=array(
+	'header'=>'Создать надпись', // заголовок в меню
+	'link'=>'gettext.html' // ссылка на файл модуля
+);
+```
+Модуль откроется в отдельном окне. Для получения модулем текущего каталога open-filemanager - используйте код
+```js
+var folder=opener.folder;
+```
+Для получения текущего выделенного объекта - можете использовать конструкцию вида
+```js
+var selected=opener.$('.selected').find('b').text();
+...
+Примечание: Проверка прав на каталог осуществляется в рамках модуля. Open-filemanager лишь вызывает его с указанием директории и позволяет обратиться и произвести какие-либо манипуляции через объект opener.
+
 Краткая история версий
 ======================
+
+2.3
+- CSRF защита
+- Формат изображений для загрузки - по умолчанию выбран изображения
+- Добавлена иконка для директорий
+- Директории располагаются в самом начале, а не в перемешку с файлами
+- Увеличена область показа миниатюрки
+- Добавлена поддержка собственных модулей
+- Добавлена возможность настроить отдельные настройки на каждый каталог в отдельности
+- Добавлена возможность скрыть конкретные файлы, или отобразить только указаные файлы из всего каталога
+- Небольшие исправления с транскрипцией
 
 2.2
 - Возможность указания нечеткой проверки путей soft_check
@@ -140,9 +216,11 @@ ob_clean();
 =====
 
 - Работа под ckeditor
-- Убрать зависимость от jquery
-- скины
 - локализация
+- Drag&Drop upload
+- Поиск файлов
+- Отображение хлебных крошек
+- Перестройка работы в качестве класса
 
 Страница проекта
 ===============
