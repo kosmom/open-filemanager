@@ -103,7 +103,7 @@ tinyMCEPopup = {
 
 function set_image(object){
     var val=$(object).attr('folder')+$(object).find('b').text();
-	if (typeof('choose_function')!='undefined'){
+	if (typeof(choose_function)!='undefined'){
 		if (typeof(opener[choose_function])=='function'){
 			opener[choose_function](val);
 			return window.close();
