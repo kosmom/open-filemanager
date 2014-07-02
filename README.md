@@ -1,7 +1,7 @@
 Open-filemanager
 ================
 
-free filemanager for tinymce 3-4 or standalone version
+free filemanager for tinymce 3-4, ckeditor 4 or standalone version
 
 Бесплатный файлменеджер для управления файлами. Легкий, гибкий, быстрая загрузка, легко настраивать и расширять. Поддержка транслита, преобразование изображений, гибкая настройка прав на каждый каталог в отдельности, мультизагрузка, CSRF защита, поддержка модулей
 
@@ -63,7 +63,7 @@ $rights=array('access'=>true,'file'=>array('read'=>true,'choose'=>true),'folder'
 }
 ```
 
-Настройка для работы с tinymce 4. Пример шаблона
+Настройка для работы с tinymce 4. Пример подключения
 ===============================================
 ```js
 tinymce.init({
@@ -82,6 +82,17 @@ tinymce.init({
 	    }
 
 	});
+```
+
+Настройка для работы с ckeditor 4. Пример подключения
+===============================================
+```js
+$('textarea').ckeditor({
+	...
+	filebrowserBrowseUrl :'open-filemanager.php',
+	filebrowserImageBrowseUrl : 'open-filemanager.php',
+	...
+});
 ```
 
 Вызов файл-менеджера в качестве автономного решения
@@ -180,6 +191,8 @@ var selected=opener.$('.selected').find('b').text();
 
 Краткая история версий
 ======================
+2.4
+- Поддержка CKEditor 4
 
 2.3
 - CSRF защита
@@ -218,7 +231,6 @@ var selected=opener.$('.selected').find('b').text();
 Планы
 =====
 
-- Работа под ckeditor
 - локализация
 - Drag&Drop upload
 - Поиск файлов
