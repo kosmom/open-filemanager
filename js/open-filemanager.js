@@ -3,7 +3,8 @@ function select(object){
     $(object).addClass('selected');
 }
 function set_folder(object,folder){
-	location.search='?folder='+(typeof(folder)!='undefined'?folder:$(object).attr('folder')+$(object).find('b').text())+(typeof(config_file)!='undefined'?'&config='+config_file:'')+(typeof(choose_function)!='undefined'?'&choose='+choose_function:'');
+	if (location.search.indexOf('CKEditorFuncNum')!=-1)var funcnum=getQueryStringParam('CKEditorFuncNum');
+	location.search='?folder='+(typeof(folder)!='undefined'?folder:$(object).attr('folder')+$(object).find('b').text())+(typeof(config_file)!='undefined'?'&config='+config_file:'')+(typeof(choose_function)!='undefined'?'&choose='+choose_function:'')+(funcnum?'&CKEditorFuncNum='+funcnum:'');
 }
 function create_folder(){
     var name=prompt('Укажите название папки');
@@ -121,6 +122,14 @@ function set_image(object){
 		}
     }
 	}catch (e) { void(e); }
+
+	if (location.search.indexOf('CKEditorFuncNum')!=-1){
+		var funcnum=getQueryStringParam('CKEditorFuncNum');
+		opener.CKEDITOR.tools.callFunction(funcnum, val);
+		close();
+		return true;
+	}
+
 	tinyMCEPopup.init();
     var win = tinyMCEPopup.getWindowArg("window");
         win.document.getElementById(tinyMCEPopup.getWindowArg("input")).value = val;
@@ -130,3 +139,9 @@ function set_image(object){
         tinyMCEPopup.close();
 	}
 }
+function getQueryStringParam(name) {
+	var regex = new RegExp('[?&]' + name + '=([^&]*)'),
+		result = window.location.search.match(regex);
+
+	return (result && result.length > 1 ? decodeURIComponent(result[1]) : null);
+};
