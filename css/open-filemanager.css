@@ -19,12 +19,19 @@ body{
 	font-size: 16px;
 	color: inherit;
 }
-.open-filemanager .folder{
+.open-filemanager .folder,.open-filemanager .file{
 	padding: 10px;
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	-ms-user-select: none;
     user-select: none;
+}
+.open-filemanager .folder b::before,.open-filemanager .file b::before{
+    display: block;
+    font-family: tahoma;
+    margin-left: 20px;
+    font-size: 100px;
+    color: #999;
 }
 .open-filemanager .folder b::before{
     content:"¶";
@@ -33,12 +40,11 @@ body{
     -ms-transform: rotate(90deg);
     -o-transform: rotate(90deg);
     filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
-    display: block;
-    font-family: tahoma;
     text-shadow: 11px 0px 0px #999, -11px 0px 0px #ccc;
-    margin-left: 20px;
-    font-size: 100px;
-    color: #999;
+}
+.open-filemanager .file b::before{
+    content:"∏";
+    text-shadow: 15px 0px 0px #999, -15px 0px 0px #ccc;
 }
 .open-filemanager .folder.closed b::before{
     text-shadow: 11px 0px 0px #999, -8px 0px 0px #bbb;
