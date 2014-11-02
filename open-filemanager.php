@@ -14,7 +14,7 @@ if ($lazy_load)$include[]=array('type'=>'js','href'=>$basehttp.'/js/lazyload.js'
 $soft_check=0;
 
 // default basedir config
-$upload_extensions=array('gif','jpeg','jpg','png'); // в нижнем регистре
+$upload_extensions=array('gif','jpeg','jpg','png','zip','txt'); // lower register
 $replace_when_exists=false;
 $modules=array();
 $modify_images=array(
@@ -39,36 +39,34 @@ $open_filemanager=true;
 if (file_exists($config_file))require $config_file;
 
 // определяем права для текущего каталога путем наследования
-if (empty($rights['access']))die('Доступ запрещен');
+if (empty($rights['access']))die('Access dinided');
 
 /*********************code next*************************/
 $folder=$_GET['folder'];
 $scriptfolder=dirname($_SERVER['SCRIPT_FILENAME']);
 $full_name=realpath($basefolder.$folder);
-if (!$full_name)die('Базового каталога '.$basefolder.' не существует');
+if (!$full_name)die('Base folder '.$basefolder.' not exist');
 if (substr(substr(str_replace('\\','/',$full_name),0,strlen($scriptfolder.$basefolder)+1),$soft_check)!=substr($scriptfolder."/".$basefolder,$soft_check))die('Каталог '.$basefolder.' указан не верно');
 $path=substr(str_replace('\\','/',$full_name),strlen($scriptfolder.$basefolder)+1);
 $backpath=substr(str_replace('\\','/',realpath($basefolder.$folder.'/..')),strlen($scriptfolder.$basefolder)+1);
 $csrf=sha1(session_id().$csrf_secret.$_SERVER['SERVER_NAME']);
-if ($_POST['act']){
-	if ($_POST['csrf']!=$csrf)die('CSRF ошибка. Перезагрузите форму и попробуйте еще раз');
-}
+if ($_POST['act'] and $_POST['csrf']!=$csrf)die('CSRF error. Refresh pare please');
 switch($_POST['act']){
 	case 'add_folder':
-		if (!$rights['folder']['create'])die('Добавление каталогов запрещено');
+		if (!$rights['folder']['create'])die('Add folder access denided');
 	    $folder=translit($_POST['folder']);
-		if (is_dir($basefolder.'/'.($path?($path.'/'):'').$folder))die('Данный каталог уже существует');
+		if (is_dir($basefolder.'/'.($path?($path.'/'):'').$folder))die('Folder already exist');
 		mkdir($basefolder.'/'.($path?($path.'/'):'').$folder);
 		die('done');
 	case 'delete':
 	    $path=$basefolder.'/'.($path?($path.'/'):'').$_POST['name'];
 		if (is_dir($path)){
-			if (!$rights['folder']['delete'])die('Удаление каталогов запрещено');
+			if (!$rights['folder']['delete'])die('Folder remove access denided');
 		}else{
-			if (!$rights['file']['delete'])die('Удаление файлов запрещено');
+			if (!$rights['file']['delete'])die('File remove access fineded');
 		}
 		if (is_dir($path)){
-			if (count(glob($path."/*")))die('Директория не пуста. Перед удалением - необходимо очистить директорию от файлов и вложеных файлов');
+			if (count(glob($path."/*")))die('Folder is not empty. You can remove only empty folders');
 			rmdir($path);
 		}
 		if (is_file($path))unlink($path);
@@ -76,22 +74,22 @@ switch($_POST['act']){
 	case 'rename':
 		$oldpath=$basefolder.'/'.($path?($path.'/'):'').$_POST['name'];
 		if (is_dir($oldpath)){
-			if (!$rights['folder']['rename'])die('Переименование каталогов запрещено');
+			if (!$rights['folder']['rename'])die('Folder rename access denided');
 		}else{
-			if (!$rights['file']['rename'])die('Переименование файлов запрещено');
+			if (!$rights['file']['rename'])die('File rename access denided');
 		}
 		$newpath=$basefolder.'/'.($path?($path.'/'):'').translit($_POST['newname']);
-		if (!file_exists($oldpath))die('Файла или каталога - не существует');
+		if (!file_exists($oldpath))die('File or folder not exist');
 		rename($oldpath,$newpath);
 		die('done');
 	case 'upload':
 	    $error=array();
 		if (!$rights['file']['upload']){
-	        $error[]="Ошибка: Заливка файлов запрещена";
+	        $error[]="File upload access denided";
     	    break;
 	    }
 	    if (empty($_FILES['file'])){
-	        $error[]="Ошибка: Файлы не вложены";
+	        $error[]="File upload not included";
     	    break;
 	    }
 
@@ -100,7 +98,7 @@ switch($_POST['act']){
         }
         $_FILES['file']=$tmpfiles;
 		foreach ($_FILES['file'] as $file){
-			// все возможные расширения (без учета регистра)
+			// all possible extensions
 			if($file['error']==1){
 		        $error[]="Ошибка загрузки файла. ".$file['name']." не был полностью загружен. Возможно, размер превышает допустимый";
 		        break;
@@ -113,43 +111,37 @@ switch($_POST['act']){
 		    $extension=strtolower($pathinfo['extension']);
 		    $filename=translit($pathinfo['filename']);
 	        if(!in_array($extension,$upload_extensions)){
-		        $error[]="Ошибка загрузки файла: ".$file['name']." Недопустимое расширение (".$extension.")";
+		        $error[]="Uploading error: ".$file['name']." wrong extension (".$extension.")";
 	    	    break;
 	        }
 	        }else{
-	            $error[]="Ошибка загрузки файла: ".$file['name']." не передан!</div>";
+	            $error[]="Uploading error: ".$file['name']." not transmited!</div>";
 	            break;
 	        }
-			if ($modify_images['format'])$extension=$modify_images['format'];
+			if ($modify_images['format'] and is_image($extension))$extension=$modify_images['format'];
 
-	        // заливка свободным номером
+	        // find next free filename
 	        $name=$basefolder.'/'.($path?($path.'/'):'').$filename;
 			$i='';
 			if (!$replace_when_exists){
-				while (file_exists($name.$i.'.'.$extension)){
-		            $i++;
-		        }
+				while (file_exists($name.$i.'.'.$extension))$i++;
 			}
 			$selected=$name.$i.'.'.$extension;
-	        $prop=getimagesize($file['tmp_name']);
-			if (empty($prop)){
-				$error[]="Ошибка загрузки файла: ".$file['name']." не удается прочесть. Вероятно - он не содержит изображение";
-				break;
-			}
-			if (!in_array($prop[2],array(IMAGETYPE_JPEG,IMAGETYPE_GIF,IMAGETYPE_PNG))){
-				$error[]="Ошибка загрузки файла: ".$file['name']." не удается прочесть. Вероятно - он не содержит изображение";
+	        if (is_image($extension)){
+			$prop=getimagesize($file['tmp_name']);
+			if (empty($prop) or !in_array($prop[2],array(IMAGETYPE_JPEG,IMAGETYPE_GIF,IMAGETYPE_PNG))){
+				$error[]="Uploading error: ".$file['name']." not readeble. Possible - is not image format";
 				break;
 			}
 			$source_width=$prop[0];
 			$source_height=$prop[1];
 
 			$reduce=0.1;
-			// расчет итогового размера
+			// total size calc
 			if ($modify_images['max-width'])$reduce=max($reduce,$source_width/$modify_images['max-width']);
 			if ($modify_images['max-height'])$reduce=max($reduce,$source_height/$modify_images['max-height']);
 
 			if (($modify_images['aspect-ratio-modify'] or $reduce>1 or $modify_images['format']) and $modify_images['quality']){
-				// преобразования. Требуется много памяти для открытия больших изображений
 				switch($prop[2]){
 				case IMAGETYPE_JPEG:
 					$image = imagecreatefromjpeg($file['tmp_name']);
@@ -165,11 +157,10 @@ switch($_POST['act']){
 				$maxx=$source_width/$reduce;
 				$maxy=$source_height/$reduce;
 
-				// преобразования пропорций
 				switch($modify_images['aspect-ratio-modify']){
 				case 'resize':
 					if (!$modify_images['aspect-ratio-prop'])break;
-					// расширяем изображение до нужных пропорций, с целью сохранения качества
+					// maximize picture to save quality
 					if (($source_width/$source_height)>$modify_images['aspect-ratio-prop']){
 						$x=$source_width;
 						$y=$source_height*($source_width/$source_height)/$modify_images['aspect-ratio-prop'];
@@ -192,13 +183,13 @@ switch($_POST['act']){
 
 					if (!$modify_images['aspect-ratio-prop'])break;
 					if (($source_width/$source_height)>$modify_images['aspect-ratio-prop']){
-						// шире чем нужно
+						// more wide
 						$y=$source_height;
 						$x=$source_width/($source_width/$source_height)*$modify_images['aspect-ratio-prop'];
 						$top=0;
 						$left=($source_width-$x)*$modify_images['aspect-ratio-crop-position']/100;
 					}else{
-						// выше чем нужно
+						// more hight
 						$x=$source_width;
 						$y=$source_height/($source_width/$source_height)*$modify_images['aspect-ratio-prop'];
 						$left=0;
@@ -217,7 +208,7 @@ switch($_POST['act']){
 					imagecopyresampled($copy,$image,0,0,$left,$top,$result_x,$result_y,$x,$y);
 					break;
 				case false:
-					// только уменьшаем изображение, если требуется
+					// only small size if need
 					if ($reduce>1){
 						$copy = imagecreatetruecolor($maxx, $maxy);
 						imagesavealpha($copy,true);
@@ -227,7 +218,7 @@ switch($_POST['act']){
 					}
 					break;
 				default:
-					$error[]='Указан несуществующий способ сжатия';
+					$error[]='Reduce method not exist';
 					imagedestroy($image);
 					continue;
 				}
@@ -251,10 +242,30 @@ switch($_POST['act']){
 				imagedestroy($image);
 
 			}else{
-				// преобразования не требуются, просто копируем файл
+				// not modify, only copy original file
 				move_uploaded_file($file['tmp_name'],$selected);
 			}
+	        }else{
+	            // not image, only copy original file
+				move_uploaded_file($file['tmp_name'],$selected);
+	        }
 		}
+}
+function is_image($extension){
+    switch ($extension){
+        case 'jpg':
+        case 'jpeg':
+        case 'gif':
+        case 'png':
+            return true;
+    }
+    return false;
+}
+function onlyimages($extensions){
+    foreach ($extensions as $extension) {
+        if (!is_image($extension))return false;
+    }
+    return true;
 }
 function translit($str){
 	global $translit;
@@ -287,16 +298,16 @@ switch ($item['type']){
 <div class="open-filemanager">
 <div class="dark">
 <div>
-<h1>Open-filemanager</h1><span>v 2.3</span>
-<?if ($rights['file']['choose']){?><p>Дважды щелкните на файл, чтобы выбрать его</p><?}?>
-<p><b>Open-filemanager</b> - простой бесплатный файл-менеджер с открытым исходным кодом. Вы можете использовать его как угодно, где угодно и когда угодно без каких-либо ограничений</p>
-<p>Используйте продукт на свой страх и риск. Автор не несет ответственности за использование данного продукта</p>
-<p>Сайт проекта: <a href="http://kosmom.ru/web/open-filemanager" target="_blank">http://kosmom.ru/web/open-filemanager</a></p>
+<h1>Open-filemanager</h1><span>v 2.5</span>
+<?if ($rights['file']['choose']){?><p>Doubleclick to choose file</p><?}?>
+<p><b>Open-filemanager</b> - free simple opensource web-filemanager. You may use it for free with no frames</p>
+<p>Use product on own risk. Author not answer forusing or not using this product</p>
+<p>Project site: <a href="http://kosmom.ru/web/open-filemanager" target="_blank">http://kosmom.ru/web/open-filemanager</a></p>
 </div>
 </div>
 <div class="panel">
     <?if ($rights['folder']['create']){?><a onclick="create_folder()" class="create_dialog">Создать папку</a><?}?>
-	<?if ($rights['file']['upload']){?><form method="POST" enctype="multipart/form-data"><a class="upload">Залить файлы</a><input type="hidden" name="csrf" value="<?=$csrf?>"> <input accept="image/*" type="file" name="file[]" multiple name="upload" onchange="$(this).closest('form').submit();" /><input type="hidden" name="act" value="upload"></form><?}?>
+	<?if ($rights['file']['upload']){?><form method="POST" enctype="multipart/form-data"><a class="upload">Залить файлы</a><input type="hidden" name="csrf" value="<?=$csrf?>"> <input <?=onlyimages($upload_extensions)?'accept="image/*"':''?> type="file" name="file[]" multiple name="upload" onchange="$(this).closest('form').submit();" /><input type="hidden" name="act" value="upload"></form><?}?>
 	<?if ($rights['folder']['rename']||$rights['file']['rename']){?><a onclick="rename()" class="rename">Переименовать</a><?}?>
 	<?if ($rights['folder']['delete']||$rights['file']['delete']){?><a onclick="delete_()" class="delete">Удалить</a><?}?>
 	<?foreach ($modules as $item){?>
@@ -336,7 +347,11 @@ if ($folders)foreach ($folders as $filename=>$path){?>
 <div class="folder closed" onclick="select(this)" ondblclick="set_folder(this)" folder='<?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
 <?}?>
 <?if ($files)foreach ($files as $filename=>$path){?>
+<?if (is_image(strtolower(substr(strrchr($filename, '.'), 1)))){?>
 <div onclick="select(this)" <?if ($rights['file']['choose']){?>ondblclick="set_image(this)"<?}?> <?if ($selected==$filename){?>class="selected"<?}?> folder='<?=$basefolder?><?=$path?>/'><img <?if ($lazy_load){?>class="lazy-load" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-<?}?>src="<?=$basehttp?><?=$basefolder?><?=$path?>/<?=$filename?>"><b title="<?=$filename?>"><?=$filename?></b></div>
+<?}else{?>
+<div class="file" onclick="select(this)" <?if ($rights['file']['choose']){?>ondblclick="set_image(this)"<?}?> <?if ($selected==$filename){?>class="selected"<?}?> folder='<?=$basefolder?><?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
+<?}?>
 <?}?>
 
 </div>
