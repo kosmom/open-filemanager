@@ -66,7 +66,7 @@ switch($_POST['act']){
 			if (!$rights['file']['delete'])die('File remove access fineded');
 		}
 		if (is_dir($path)){
-			if (count(glob($path."/*")))die('Folder is not empty. You can remove only empty folders');
+			if (glob($path."/*"))die('Folder is not empty. You can remove only empty folders');
 			rmdir($path);
 		}
 		if (is_file($path))unlink($path);
