@@ -3,8 +3,19 @@ function select(object){
     $(object).addClass('selected');
 }
 function set_folder(object,folder){
-	if (location.search.indexOf('CKEditorFuncNum')!=-1)var funcnum=getQueryStringParam('CKEditorFuncNum');
-	location.search='?folder='+(typeof(folder)!='undefined'?folder:$(object).attr('folder')+$(object).find('b').text())+(typeof(config_file)!='undefined'?'&config='+config_file:'')+(typeof(choose_function)!='undefined'?'&choose='+choose_function:'')+(funcnum?'&CKEditorFuncNum='+funcnum:'');
+	var prmstr = window.location.search.substr(1);
+    var params = {};
+    var prmarr = prmstr.split("&");
+    for ( var i = 0; i < prmarr.length; i++) {
+        var tmparr = prmarr[i].split("=");
+        params[tmparr[0]] = tmparr[1];
+    }
+	params['folder']=(typeof(folder)!='undefined'?folder:$(object).attr('folder')+$(object).find('b').text());
+	prmarr=[];
+	for ( var i in params) {
+		prmarr.push(i+'='+params[i]);
+    }
+	location.search='?'+prmarr.join('&');
 }
 function create_folder(){
     var name=prompt('Укажите название папки');
@@ -84,7 +95,6 @@ tinyMCEPopup = {
 
 	getWindowArg : function(n, dv) {
 		var v = this.params[n];
-
 		return tinymce.is(v) ? v : dv;
 	},
 
@@ -95,8 +105,7 @@ tinyMCEPopup = {
 
 	close : function() {
 		var t = this;
-
-		t.dom = t.dom.doc = null; // Cleanup
+		t.dom = t.dom.doc = null;
 		t.editor.windowManager.close(window, t.id);
 	}
 
