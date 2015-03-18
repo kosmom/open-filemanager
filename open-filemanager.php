@@ -1,5 +1,6 @@
 <?php
 session_start();
+error_reporting(1);
 $basefolder='images/photo'; // base dir
 $csrf_secret='defaultsecretphrase';
 $basehttp='http://'.$_SERVER['HTTP_HOST'].'/';
@@ -276,7 +277,9 @@ function translit($str){
 	"а"=>'a',"б"=>'b',"в"=>'v',"г"=>'g',"д"=>'d',"е"=>'e',"ё"=>'yo',"ж"=>'zh',"з"=>'z',"и"=>'i',"й"=>'j',"к"=>'k',"л"=>'l',"м"=>'m',"н"=>'n',"о"=>'o',"п"=>'p',"р"=>'r',"с"=>'s',"т"=>'t',"у"=>'u',"ф"=>'f',"х"=>'kh',"ц"=>'c',"ч"=>'ch',"ш"=>'sh',"щ"=>'sch',"ъ"=>'',"ы"=>'y',"ь"=>'',"э"=>'e',"ю"=>'yu',"я"=>'ja'
 	));
 }
+header('Content-Type: text/html; charset=utf-8');
 ?>
+<meta charset="UTF-8">
 <title>Open-filemanager</title>
 <script>
 var csrf='<?=$csrf?>';
@@ -298,7 +301,7 @@ switch ($item['type']){
 <div class="open-filemanager">
 <div class="dark">
 <div>
-<h1>Open-filemanager</h1><span>v 2.5</span>
+<h1>Open-filemanager</h1><span>v 2.6</span>
 <?if ($rights['file']['choose']){?><p>Doubleclick to choose file</p><?}?>
 <p><b>Open-filemanager</b> - free simple opensource web-filemanager. You may use it for free with no frames</p>
 <p>Use product on own risk. Author not answer forusing or not using this product</p>
