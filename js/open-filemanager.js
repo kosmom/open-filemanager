@@ -120,12 +120,13 @@ function set_image(object){
 		}
 	}else{
 	try {
-	if (typeof(top.tinymce)!=='undefined'){
-        if (typeof(top.tinymce.activeEditor)){
-			if (typeof(top.tinymce.activeEditor.windowManager.getParams)!='undefined'){
-	            var args = top.tinymce.activeEditor.windowManager.getParams();
-	            top.document.getElementById(args['input']).value = val;
-	            top.tinymce.activeEditor.windowManager.close();
+    var parentMCE = parent.tinymce;
+	if (typeof(parentMCE)!=='undefined'){
+        if (typeof(parentMCE.activeEditor)){
+			if (typeof(parentMCE.activeEditor.windowManager.getParams)!='undefined'){
+	            var args = parentMCE.activeEditor.windowManager.getParams();
+	            parent.document.getElementById(args['input']).value = val;
+	            parentMCE.activeEditor.windowManager.close();
 	            return true;
 	        }
 		}
