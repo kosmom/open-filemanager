@@ -13,7 +13,6 @@ $include=array(
 );
 if ($lazy_load)$include[]=array('type'=>'js','href'=>$basehttp.'/js/lazyload.js');
 $soft_check=0;
-
 // default basedir config
 $upload_extensions=array('gif','jpeg','jpg','png','zip','txt'); // lower register
 $replace_when_exists=false;
@@ -29,7 +28,6 @@ $modify_images=array(
 );
 $show_files=array(); // key as filename/foldername
 $hide_files=array(); // key as filename/foldername
-
 if (!isset($rights))$rights=array();
 // access
 // flle - read,delete,rename,upload,choose
@@ -38,10 +36,8 @@ $config_file='open-filemanager-config.php';
 if (isset($_GET['config']))$config_file='open-filemanager-config-'.$_GET['config'].'.php';
 $open_filemanager=true;
 if (file_exists($config_file))require $config_file;
-
 // определяем права для текущего каталога путем наследования
 if (empty($rights['access']))die('Access dinided');
-
 /*********************code next*************************/
 $folder=$_GET['folder'];
 $scriptfolder=dirname($_SERVER['SCRIPT_FILENAME']);
@@ -93,7 +89,6 @@ switch($_POST['act']){
 	        $error[]="File upload not included";
     	    break;
 	    }
-
 		foreach ($_FILES['file']['tmp_name'] as $key=>$val){
             $tmpfiles[$key]=array('name'=>$_FILES['file']['name'][$key],'type'=>$_FILES['file']['type'][$key],'tmp_name'=>$_FILES['file']['tmp_name'][$key],'error'=>$_FILES['file']['error'][$key],'size'=>$_FILES['file']['size'][$key]);
         }
@@ -120,7 +115,6 @@ switch($_POST['act']){
 	            break;
 	        }
 			if ($modify_images['format'] and is_image($extension))$extension=$modify_images['format'];
-
 	        // find next free filename
 	        $name=$basefolder.'/'.($path?($path.'/'):'').$filename;
 			$i='';
@@ -136,12 +130,10 @@ switch($_POST['act']){
 			}
 			$source_width=$prop[0];
 			$source_height=$prop[1];
-
 			$reduce=0.1;
 			// total size calc
 			if ($modify_images['max-width'])$reduce=max($reduce,$source_width/$modify_images['max-width']);
 			if ($modify_images['max-height'])$reduce=max($reduce,$source_height/$modify_images['max-height']);
-
 			if (($modify_images['aspect-ratio-modify'] or $reduce>1 or $modify_images['format']) and $modify_images['quality']){
 				switch($prop[2]){
 				case IMAGETYPE_JPEG:
@@ -154,10 +146,8 @@ switch($_POST['act']){
 					$image =imagecreatefrompng($file['tmp_name']);
 					break;
 				}
-
 				$maxx=$source_width/$reduce;
 				$maxy=$source_height/$reduce;
-
 				switch($modify_images['aspect-ratio-modify']){
 				case 'resize':
 					if (!$modify_images['aspect-ratio-prop'])break;
@@ -181,7 +171,6 @@ switch($_POST['act']){
 					imagecopyresampled($copy,$image,0,0,0,0,$x,$y,$source_width,$source_height);
 					break;
 				case 'crop':
-
 					if (!$modify_images['aspect-ratio-prop'])break;
 					if (($source_width/$source_height)>$modify_images['aspect-ratio-prop']){
 						// more wide
@@ -196,7 +185,6 @@ switch($_POST['act']){
 						$left=0;
 						$top=($source_height-$y)*$modify_images['aspect-ratio-crop-position']/100;
 					}
-
 					$reduce=1;
 					if ($modify_images['max-width'])$reduce=max($reduce,$x/$modify_images['max-width']);
 					if ($modify_images['max-height'])$reduce=max($reduce,$y/$modify_images['max-height']);
@@ -227,7 +215,6 @@ switch($_POST['act']){
 					imagedestroy($image);
 					$image=$copy;
 				}
-
 				switch($extension){
 				case 'jpg':
 				case 'jpeg':
@@ -241,7 +228,6 @@ switch($_POST['act']){
 					break;
 				}
 				imagedestroy($image);
-
 			}else{
 				// not modify, only copy original file
 				move_uploaded_file($file['tmp_name'],$selected);
@@ -279,6 +265,7 @@ function translit($str){
 }
 header('Content-Type: text/html; charset=utf-8');
 ?>
+<meta name="viewport" content="width=device-width,user-scalable=no" />
 <meta charset="UTF-8">
 <title>Open-filemanager</title>
 <script>
@@ -301,7 +288,7 @@ switch ($item['type']){
 <div class="open-filemanager">
 <div class="dark">
 <div>
-<h1>Open-filemanager</h1><span>v 2.6</span>
+<h1>Open-filemanager</h1><span>v 2.7</span>
 <?if ($rights['file']['choose']){?><p>Doubleclick to choose file</p><?}?>
 <p><b>Open-filemanager</b> - free simple opensource web-filemanager. You may use it for free with no frames</p>
 <p>Use product on own risk. Author not answer forusing or not using this product</p>
@@ -340,20 +327,20 @@ if ($show_files){
 		    if (!$rights['folder']['read'])continue;
 		    $folders[$filename]=$path;
 		}else{
-			if (!$rights['file']['read'])continue;
+                    if (!$rights['file']['read'])continue;
 		    $files[$filename]=$path;
 		}
 	}
 }
-if ($path!=''){?><div class="folder open" onclick="select(this)" ondblclick="set_folder(this,'<?=$backpath?>')" folder='<?=$backpath?>/'><b>..</b></div><?}
+if ($path!=''){?><div class="folder open" onclick="select(this,'<?=$backpath?>')" data-folder='<?=$backpath?>/'><b>..</b></div><?}
 if ($folders)foreach ($folders as $filename=>$path){?>
-<div class="folder closed" onclick="select(this)" ondblclick="set_folder(this)" folder='<?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
+<div class="folder closed" onclick="select(this)" data-folder='<?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
 <?}?>
 <?if ($files)foreach ($files as $filename=>$path){?>
 <?if (is_image(strtolower(substr(strrchr($filename, '.'), 1)))){?>
-<div onclick="select(this)" <?if ($rights['file']['choose']){?>ondblclick="set_image(this)"<?}?> <?if ($selected==$filename){?>class="selected"<?}?> folder='<?=$basefolder?><?=$path?>/'><img <?if ($lazy_load){?>class="lazy-load" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-<?}?>src="<?=$basehttp?><?=$basefolder?><?=$path?>/<?=$filename?>"><b title="<?=$filename?>"><?=$filename?></b></div>
+<div onclick="select(this)" <?if ($rights['file']['choose']){?>data-choose="y"<?}?> class="image<?if ($selected==$filename){?> selected<?}?>" data-folder='<?=$basefolder?><?=$path?>/'><img <?if ($lazy_load){?>class="lazy-load" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-<?}?>src="<?=$basehttp?><?=$basefolder?><?=$path?>/<?=$filename?>"><b title="<?=$filename?>"><?=$filename?></b></div>
 <?}else{?>
-<div class="file" onclick="select(this)" <?if ($rights['file']['choose']){?>ondblclick="set_image(this)"<?}?> <?if ($selected==$filename){?>class="selected"<?}?> folder='<?=$basefolder?><?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
+<div onclick="select(this)" <?if ($rights['file']['choose']){?>data-choose="y"<?}?> class="file<?if ($selected==$filename){?> selected<?}?>" data-folder='<?=$basefolder?><?=$path?>/'><b title="<?=$filename?>"><?=$filename?></b></div>
 <?}?>
 <?}?>
 
