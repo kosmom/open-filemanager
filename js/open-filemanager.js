@@ -1,16 +1,29 @@
-function select(object){
+var times=false;
+
+function select(object,folder){
     $('.selected').removeClass('selected');
     $(object).addClass('selected');
+    if (!times){
+        times=true;
+        setTimeout('times=false;', 1000);
+    }else{
+        // dblclick
+        if ($(object).is('.folder')){
+            set_folder(object,folder);
+        }else if ($(object).data('choose')=='y'){
+            set_image(object);
+        }
+    }
 }
 function set_folder(object,folder){
-	var prmstr = window.location.search.substr(1);
+    var prmstr = window.location.search.substr(1);
     var params = {};
     var prmarr = prmstr.split("&");
     for ( var i = 0; i < prmarr.length; i++) {
         var tmparr = prmarr[i].split("=");
         params[tmparr[0]] = tmparr[1];
     }
-	params['folder']=(typeof(folder)!='undefined'?folder:$(object).attr('folder')+$(object).find('b').text());
+	params['folder']=(typeof(folder)!='undefined'?folder:$(object).data('folder')+$(object).find('b').text());
 	prmarr=[];
 	for ( var i in params) {
 		prmarr.push(i+'='+params[i]);
@@ -112,7 +125,7 @@ tinyMCEPopup = {
 };
 
 function set_image(object){
-    var val=$(object).attr('folder')+$(object).find('b').text();
+    var val=$(object).data('folder')+$(object).find('b').text();
 	if (typeof(choose_function)!='undefined'){
 		if (typeof(opener[choose_function])=='function'){
 			opener[choose_function](val);
@@ -154,4 +167,4 @@ function getQueryStringParam(name) {
 		result = window.location.search.match(regex);
 
 	return (result && result.length > 1 ? decodeURIComponent(result[1]) : null);
-};
+}
