@@ -14,6 +14,8 @@ $include=array(
 if ($lazy_load)$include[]=array('type'=>'js','href'=>$basehttp.'/js/lazyload.js');
 $soft_check=0;
 // default basedir config
+$tinypng_key=false;
+$tinypng_repeat=1;
 $upload_extensions=array('gif','jpeg','jpg','png','zip','txt'); // lower register
 $replace_when_exists=false;
 $modules=array();
@@ -232,6 +234,32 @@ switch($_POST['act']){
 				// not modify, only copy original file
 				move_uploaded_file($file['tmp_name'],$selected);
 			}
+			//tinypng module
+			if ($tinypng_key && in_array($extension,array('jpg','png','jpeg')) && empty($tinypng_critical_error)){
+				if (!$tiny_init){
+					$tiny_init=true;
+					if (empty(\Tinify\VERSION)){
+						$error[]='TinyPng class must be required';
+						$tinypng_critical_error=true;
+						continue;
+					}
+					try {
+						\Tinify\setKey($tinypng_key);
+						\Tinify\validate();
+					} catch(\Tinify\Exception $e) {
+							$error[]='TinyPng Validation of API key failed.';
+							$tinypng_critical_error=true;
+							continue;
+					}
+				}
+				try{
+					for ($i=1;$i<$tinypng_repeat;$i++)\Tinify\fromFile($selected)->toFile($selected);
+				}catch(Exception $exc){
+					$error[]='TinyPng error '.$exc->getMessage();
+				}
+			}
+
+
 	        }else{
 	            // not image, only copy original file
 				move_uploaded_file($file['tmp_name'],$selected);
@@ -288,10 +316,10 @@ switch ($item['type']){
 <div class="open-filemanager">
 <div class="dark">
 <div>
-<h1>Open-filemanager</h1><span>v 2.7</span>
+<h1>Open-filemanager</h1><span>v 2.8b</span>
 <?if ($rights['file']['choose']){?><p>Doubleclick to choose file</p><?}?>
 <p><b>Open-filemanager</b> - free simple opensource web-filemanager. You may use it for free with no frames</p>
-<p>Use product on own risk. Author not answer forusing or not using this product</p>
+<p>Use product on own risk. Author not have responsibility for product usage</p>
 <p>Project site: <a href="http://kosmom.ru/web/open-filemanager" target="_blank">http://kosmom.ru/web/open-filemanager</a></p>
 </div>
 </div>
@@ -300,8 +328,11 @@ switch ($item['type']){
 	<?if ($rights['file']['upload']){?><form method="POST" enctype="multipart/form-data"><a class="upload">Залить файлы</a><input type="hidden" name="csrf" value="<?=$csrf?>"> <input <?=onlyimages($upload_extensions)?'accept="image/*"':''?> type="file" name="file[]" multiple name="upload" onchange="$(this).closest('form').submit();" /><input type="hidden" name="act" value="upload"></form><?}?>
 	<?if ($rights['folder']['rename']||$rights['file']['rename']){?><a onclick="rename()" class="rename">Переименовать</a><?}?>
 	<?if ($rights['folder']['delete']||$rights['file']['delete']){?><a onclick="delete_()" class="delete">Удалить</a><?}?>
-	<?foreach ($modules as $item){?>
-	<a onclick="open_module('<?=$item['link']?>')" class="module"><?=$item['header']?></a>
+	<?foreach ($modules as $key=>$item){?>
+	<a id="plugin-<?=$key?>" onclick="open_module('<?=$item['link']?>')" class="module"><?=$item['header']?></a>
+	<script>
+		register_plugin('<?=$key?>',<?=$item['for']?$item['for']:true?>);
+	</script>
 	<?}?>
 	<a onclick="$('.dark').fadeIn(999);" class="right">?</a>
 </div>
