@@ -1,12 +1,19 @@
-var times=false;
+var times=false,preset,plugins={},selected_element='empty';
+
 
 function select(object,folder){
-    $('.selected').removeClass('selected');
-    $(object).addClass('selected');
+    var already=$(object).is('.selected');
+	$('.selected').removeClass('selected');
+    if (!already)$(object).addClass('selected');
     if (!times){
         times=true;
-        setTimeout('times=false;', 1000);
-    }else{
+		if (preset===object && !already){
+			preset=null;
+		}else{
+			preset=object;
+		}
+        setTimeout('times=false;', 500);
+    }else if (preset==object){
         // dblclick
         if ($(object).is('.folder')){
             set_folder(object,folder);
@@ -14,6 +21,16 @@ function select(object,folder){
             set_image(object);
         }
     }
+	if ($('.selected').size()){
+		if ($(object).is('.folder')){
+			selected_element='folder';
+		}else{
+			selected_element='file';
+		}
+	}else{
+		selected_element='empty';
+	}
+	check_plugins();
 }
 function set_folder(object,folder){
     var prmstr = window.location.search.substr(1);
@@ -23,7 +40,7 @@ function set_folder(object,folder){
         var tmparr = prmarr[i].split("=");
         params[tmparr[0]] = tmparr[1];
     }
-	params['folder']=(typeof(folder)!='undefined'?folder:$(object).data('folder')+$(object).find('b').text());
+	params['folder']=(typeof(folder)!='undefined'?folder:get_path(object));
 	prmarr=[];
 	for ( var i in params) {
 		prmarr.push(i+'='+params[i]);
@@ -62,13 +79,31 @@ function rename(){
         if (data=='done')$('.selected b').text(newname); else alert('Ошибка: '+data);
     });
 }
+function get_path(object){
+	return $(object).data('folder')+$(object).find('b').text();
+}
 function open_module(module_file){
-	get_pic_win= window.open(module_file, "open-filemanager-module", "width=800,height=450,status=no,toolbar=no,menubar=no,scrollbars=no");
+
+	var prmstr = window.location.search.substr(1);
+    var params = {};
+    var prmarr = prmstr.split("&");
+    for ( var i = 0; i < prmarr.length; i++) {
+        var tmparr = prmarr[i].split("=");
+        params[tmparr[0]] = tmparr[1];
+    }
+
+	if (selected_element!='empty')params['src']=get_path(preset);
+	prmarr=[];
+	for ( var i in params) {
+		prmarr.push(i+'='+params[i]);
+    }
+	get_pic_win= window.open(module_file+'?'+prmarr.join('&'), "open-filemanager-module", "width=800,height=450,status=no,toolbar=no,menubar=no,scrollbars=no");
 }
 $(function(){
 $('.dark').click(function(){
     $(this).fadeOut(1000);
 })
+check_plugins();
 })
 
 
@@ -125,7 +160,7 @@ tinyMCEPopup = {
 };
 
 function set_image(object){
-    var val=$(object).data('folder')+$(object).find('b').text();
+    var val=$(object).find('img').attr('src');
 	if (typeof(choose_function)!='undefined'){
 		if (typeof(opener[choose_function])=='function'){
 			opener[choose_function](val);
@@ -167,4 +202,18 @@ function getQueryStringParam(name) {
 		result = window.location.search.match(regex);
 
 	return (result && result.length > 1 ? decodeURIComponent(result[1]) : null);
+}
+function register_plugin(name,permissions){
+	if (typeof(permissions)!='object')permissions={folder:true,file:true,empty:true};
+	plugins[name]=permissions;
+	check_plugins();
+}
+function check_plugins(){
+	for (var key in plugins){
+		if (plugins[key][selected_element]){
+			$('#plugin-'+key).show();
+		}else{
+			$('#plugin-'+key).hide();
+		}
+	}
 }
