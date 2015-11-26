@@ -174,6 +174,7 @@ switch (implode('/',$folder)){
 $modules['text-generator']=array(
 	'header'=>'Создать надпись', // заголовок в меню
 	'link'=>'gettext.html' // ссылка на файл модуля
+	'for'=>'{folder:true,file:true,empty:true}'; // права действия модуля
 );
 ```
 
@@ -184,13 +185,39 @@ var folder=opener.folder;
 
 Для получения текущего выделенного объекта - можете использовать конструкцию вида
 ```js
-var selected=opener.$('.selected').find('b').text();
+var selected=opener.get_path($('.selected'));
 ```
 
 Примечание: Проверка прав на каталог осуществляется в рамках модуля. Open-filemanager лишь вызывает его с указанием директории и позволяет обратиться и произвести какие-либо манипуляции через объект opener.
 
+
+Подключение TinyPNG
+===================
+
+Для использования tinypng - вам потребуется получить api key на сайте и прописать его в настройки open-filemanager
+а также подключить классы tinify
+https://github.com/tinify/tinify-php
+Подгрузку классов можно использовать через autoload, а можно принудительно указать классы
+Пример использования файла настроек
+```php
+$tinypng_key='my API key';
+$tinypng_repeat=1;
+require 'class/Tinify/Source.php';
+require 'class/Tinify/ResultMeta.php';
+require 'class/Tinify/Exception.php';
+require 'class/Tinify/Client.php';
+require 'class/Tinify.php';
+require 'class/Tinify/Result.php';
+```
+Параметр $tinypng_repeat - указывает на число повторений при загрузке изображения. Одно изображение прокручивается через api указаное количество раз. Таким образом достигается наилучший результат.
+
+
 Краткая история версий
 ======================
+2.8b
+- Добавлен механизм использования tinypng.org api сжатия изображений
+- Возможность указания набора прав для собственных модулей. На новый объект, папку или файл
+
 2.7
 - Добавлена поддержка мобильных устройств
 - Исправлен баг issue#1 Когда tinymce находился внетри фрейма
